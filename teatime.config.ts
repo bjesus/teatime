@@ -13,7 +13,7 @@ let config = {
   dbConfig: {
     serverMode: "full",
     requestChunkSize: 4096,
-    url: "/books.db",
+    url: "https://teatime-library.github.io/database/books.db",
   },
   title: "TeaTime",
   icon: "🫖",
