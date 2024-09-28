@@ -194,54 +194,58 @@ const fetchResults = async (query) => {
   let dbResult = [];
 
   let maxBytesToRead = 10 * 1024 * 1024;
-  const worker = await createDbWorker(
-    [config],
-    workerUrl.toString(),
-    wasmUrl.toString(),
-    maxBytesToRead, // optional, defaults to Infinity
-  );
 
-  if (query.length > 3) {
-    console.log("doing simple");
-    dbResult = await worker.db.exec(
-      `SELECT * FROM updated_data
+  try {
+    const worker = await createDbWorker(
+      [config],
+      workerUrl.toString(),
+      wasmUrl.toString(),
+      maxBytesToRead, // optional, defaults to Infinity
+    );
+
+    if (query.length > 3) {
+      dbResult = await worker.db.exec(
+        `SELECT * FROM updated_data
           WHERE id IN (
           SELECT rowid FROM updated_data_fts
           WHERE updated_data_fts MATCH ? )
           LIMIT 10;`,
-      [`Title:${query}* OR Author:${query}*`],
-    );
-  } else {
-    const params = [];
-    if (query.title && query.author)
-      params.push(`Title:${query.title} AND Author:${query.author}`);
-    else if (query.author) params.push(`Author:${query.author}`);
-    else params.push(`Title:${query.title}`); // we must have either title or author
+        [`Title:${query}* OR Author:${query}*`],
+      );
+    } else {
+      const params = [];
+      if (query.title && query.author)
+        params.push(`Title:${query.title} AND Author:${query.author}`);
+      else if (query.author) params.push(`Author:${query.author}`);
+      else params.push(`Title:${query.title}`); // we must have either title or author
 
-    if (query.lang) params.push(query.lang);
-    if (query.ext) params.push(query.ext);
-    dbResult = await worker.db.exec(
-      `
+      if (query.lang) params.push(query.lang);
+      if (query.ext) params.push(query.ext);
+      dbResult = await worker.db.exec(
+        `
           SELECT updated_data.* FROM updated_data
           JOIN updated_data_fts ON updated_data.id = updated_data_fts.rowid
           WHERE updated_data_fts MATCH ?
           ${query.lang ? " AND Language = ? " : ""}
           ${query.ext ? " AND Extension = ? " : ""}
           LIMIT 10;`,
-      params,
-    );
-  }
+        params,
+      );
+    }
 
-  setResults(
-    dbResult[0].values.map((line) =>
-      Object.assign(
-        {},
-        ...dbResult[0].columns.map((n, index) => ({ [n]: line[index] })),
+    setResults(
+      dbResult[0].values.map((line) =>
+        Object.assign(
+          {},
+          ...dbResult[0].columns.map((n, index) => ({ [n]: line[index] })),
+        ),
       ),
-    ),
-  );
-
-  isLoading.value = false;
+    );
+  } catch (e) {
+    console.error("Error while searching: ", e);
+  } finally {
+    isLoading.value = false;
+  }
 };
 
 const handleClick = async (result) => {
