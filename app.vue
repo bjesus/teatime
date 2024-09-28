@@ -136,7 +136,7 @@ const lastResult = useState("lastResult", () => null);
 const error = useState("error", () => null);
 const downloadProgress = useState("downloadProgress", () => 0);
 const bookFile = ref(null);
-const isDragging = useState("isDragging", () => false);
+const isDragging = ref(false);
 const title = useState("title", () => appConfig.title);
 const icon = useState("icon", () => appConfig.icon);
 
