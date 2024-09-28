@@ -18,7 +18,7 @@
         </a>
         <a
           title="Back to book"
-          v-if="view !== 'book' && bookFile"
+          v-if="view !== 'book' && bookURL"
           @click="view = 'book'"
         >
           <LucideBookOpen />
@@ -147,6 +147,9 @@ const searchQuery = ref("");
 const darkMode = useState("darkMode");
 const view = useState("view");
 const isLoading = useState("isLoading");
+const icon = useState("icon");
+const title = useState("title");
+const bookURL = useState("bookURL");
 
 const search = (event) => {
   if (searchQuery.value.length > 3) props.onFetchResults(searchQuery.value);
