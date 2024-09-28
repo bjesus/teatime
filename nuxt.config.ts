@@ -5,7 +5,7 @@ export default defineNuxtConfig({
   compatibilityDate: "2024-04-03",
   devtools: { enabled: process.env.ENV === "production" ? false : true },
   modules: ["nuxt-lucide-icons"],
-  ssr: false,
+  ssr: true,
   build: {
     transpile: ["vue-book-reader"],
   },
