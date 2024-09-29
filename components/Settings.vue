@@ -52,7 +52,7 @@ onMounted(async () => {
 const setRemote = async (selection) => {
   console.log(selection.full_name);
   const [owner, repo] = selection.full_name.split("/")
-  const response = await fetch(`https://${owner}.github.io/${repo}/config.json``)
+  const response = await fetch(`https://${owner}.github.io/${repo}/config.json`)
   const config = await response.json()
   remoteConfig.value = JSON.stringify(config)
   remote.value = selection.full_name
