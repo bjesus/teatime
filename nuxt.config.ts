@@ -7,7 +7,7 @@ export default defineNuxtConfig({
   modules: ["nuxt-lucide-icons"],
   ssr: true,
   build: {
-    transpile: ["vue-book-reader"],
+    transpile: ["vue-book-reader", ({ isDev }) => !isDev && "sql.js-httpvfs"],
   },
   vite: {
     build: {

@@ -116,8 +116,7 @@ footer {
 <script setup>
 import sanitize from "sanitize-filename";
 import appConfig from "./teatime.config.ts";
-import pkg from "./node_modules/sql.js-httpvfs/dist/index.js";
-const { createDbWorker } = pkg;
+import { createDbWorker } from "sql.js-httpvfs";
 import { useLocalStorage } from "@vueuse/core";
 
 const workerUrl = new URL(
