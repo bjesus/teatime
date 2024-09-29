@@ -10,6 +10,7 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@vueuse/core": "^11.1.0",
     "lucide-vue-next": "^0.439.0",
     "nuxt": "^3.13.0",
     "nuxt-lucide-icons": "^1.0.5",

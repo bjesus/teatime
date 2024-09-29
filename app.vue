@@ -13,6 +13,7 @@
       :class="{ 'drag-over': isDragging }"
     >
       <AdvancedSearch v-if="view === 'search'" :onFetchResults="fetchResults" />
+      <Settings v-if="view === 'settings'" />
 
       <Error
         v-if="view === 'error'"
@@ -50,6 +51,9 @@
 </template>
 
 <style>
+dialog {
+  top: 30%;
+}
 * {
   font-family: sans-serif;
 }
@@ -113,18 +117,17 @@ footer {
 import sanitize from "sanitize-filename";
 import appConfig from "./teatime.config.ts";
 import { createDbWorker } from "sql.js-httpvfs";
+import { useLocalStorage } from "@vueuse/core";
+
 const workerUrl = new URL(
   "sql.js-httpvfs/dist/sqlite.worker.js",
   import.meta.url,
 );
 const wasmUrl = new URL("sql.js-httpvfs/dist/sql-wasm.wasm", import.meta.url);
 
-const config = {
-  from: "inline",
-  config: appConfig.dbConfig,
-};
+const remote = useLocalStorage("remote", null);
+const remoteConfig = useLocalStorage("remoteConfig", null);
 
-const remote = useState("remote", () => "");
 const searchQuery = useState("searchQuery", () => "");
 const isLoading = useState("isLoading", () => false);
 const directLink = useState("directLink", () => "");
@@ -177,10 +180,11 @@ const handleDrop = (event) => {
 };
 
 const fetchResults = async (query) => {
-  // if (remote.value === "") {
-  //   console.log("you have to choose a remote");
-  //   return;
-  // }
+  if (!remote.value) {
+    console.log("you have to choose a remote");
+    view.value = "settings";
+    return;
+  }
   let complexSearch = false;
   if (view === "search") {
     complexSearch.value = true;
@@ -196,13 +200,20 @@ const fetchResults = async (query) => {
   let maxBytesToRead = 10 * 1024 * 1024;
 
   try {
+    console.log("Connecting to the database...");
     const worker = await createDbWorker(
-      [config],
+      [
+        {
+          from: "inline",
+          config: JSON.parse(remoteConfig.value).dbConfig,
+        },
+      ],
       workerUrl.toString(),
       wasmUrl.toString(),
       maxBytesToRead, // optional, defaults to Infinity
     );
 
+    console.log("Making the query...");
     if (query.length > 3) {
       dbResult = await worker.db.exec(
         `SELECT * FROM updated_data
@@ -233,6 +244,7 @@ const fetchResults = async (query) => {
       );
     }
 
+    console.log("Gathering results...");
     setResults(
       dbResult[0].values.map((line) =>
         Object.assign(
