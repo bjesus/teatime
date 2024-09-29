@@ -3,6 +3,9 @@
     <h1 @click="view = 'results'">{{ icon }} {{ title }}</h1>
     <div id="options">
       <p>
+        <a @click="view = 'settings'" title="Settings">
+          <LucideSettings />
+        </a>
         <a
           v-if="view === 'book' && !isLoading"
           @click="onDownloadBook"

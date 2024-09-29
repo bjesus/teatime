@@ -26,6 +26,7 @@
         v-if="view === 'book'"
         :bookURL="bookURL"
         :downloadProgress="downloadProgress"
+        :bookProgress="bookProgress"
         :bookFile="bookFile"
       />
       <BooksList
@@ -127,6 +128,7 @@ const wasmUrl = new URL("sql.js-httpvfs/dist/sql-wasm.wasm", import.meta.url);
 
 const remote = useLocalStorage("remote", null);
 const remoteConfig = useLocalStorage("remoteConfig", null);
+const ipfsGateway = useLocalStorage("ipfsGateway", "ipfs.io");
 
 const searchQuery = useState("searchQuery", () => "");
 const isLoading = useState("isLoading", () => false);
@@ -140,6 +142,7 @@ const error = useState("error", () => null);
 const downloadProgress = useState("downloadProgress", () => 0);
 const bookFile = ref(null);
 const isDragging = ref(false);
+const bookProgress = ref(0);
 const title = useState("title", () => appConfig.title);
 const icon = useState("icon", () => appConfig.icon);
 
@@ -264,11 +267,9 @@ const handleClick = async (result) => {
   lastResult.value = result;
   view.value = "book";
   const previousHistory = JSON.parse(localStorage.getItem("history") || "[]");
+  const updatedHistory = [result, ...previousHistory];
   if (!previousHistory.find((x) => x.id === result.id)) {
-    localStorage.setItem(
-      "history",
-      JSON.stringify([result, ...previousHistory]),
-    );
+    localStorage.setItem("history", JSON.stringify(updatedHistory));
   }
   console.log("Selected result:", result.Title, result.id);
   isLoading.value = true;
@@ -315,6 +316,11 @@ const handleClick = async (result) => {
       chunksAll.set(chunk, position);
       position += chunk.length;
     }
+
+    const { fraction } = updatedHistory.find((b) =>
+      bookURL.value.includes(result.ipfs_cid),
+    );
+    bookProgress.value = fraction;
 
     // Create a Blob from the Uint8Array
     const blob = new Blob([chunksAll], {

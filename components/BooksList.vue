@@ -24,6 +24,7 @@
             ><LucideArrowBigDownDash :size="12" />
             {{ prettyBytes(result.Filesize) }}</span
           >
+          <meter min="0" max="1" :value="result.fraction" />
         </div>
       </li>
     </ul>
@@ -76,6 +77,9 @@ ul {
     &:hover {
       background: rgba(245, 245, 245);
       cursor: pointer;
+    }
+    meter {
+      width: 100%;
     }
   }
 }
