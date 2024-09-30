@@ -152,14 +152,12 @@ const booksList = computed(() => {
     : results;
 });
 
-const setResults = (r) => {
-  // const updatedResults = await Promise.all(
-  //   results.map(async (r) => ({
-  //     ...r,
-  //     Coverurl: await appConfig.getImageURL(r),
-  //   })),
-  // );
-  results.value = r;
+const setResults = (books) => {
+  const { images } = JSON.parse(remoteConfig.value);
+  results.value = books.map((b) => {
+    b.Coverurl = images.replace("${ipfs_cid}", b.ipfs_cid);
+    return b;
+  });
 };
 const downloadBook = () => {
   const link = document.createElement("a");
