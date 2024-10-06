@@ -157,7 +157,7 @@ const booksList = computed(() => {
 });
 
 const setResults = (books) => {
-  const { images, columns } = JSON.parse(remoteConfig.value);
+  const { images = "", columns = {} } = JSON.parse(remoteConfig.value);
   results.value = books.map((b) => {
     for (const key of Object.keys(columns)) {
       b[key] = b[columns[key]];
