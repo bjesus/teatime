@@ -125,6 +125,19 @@ const appConfig = useAppConfig();
 import { createDbWorker } from "sql.js-httpvfs";
 import { useLocalStorage } from "@vueuse/core";
 
+useHead({
+  title: appConfig.title,
+  link: [
+    {
+      rel: "icon",
+      href:
+        "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>" +
+        appConfig.icon +
+        "</text></svg>",
+    },
+  ],
+});
+
 const workerUrl = new URL(
   "sql.js-httpvfs/dist/sqlite.worker.js",
   import.meta.url,
