@@ -294,15 +294,13 @@ const handleClick = async (result) => {
   if (!previousHistory.find((x) => x.id === result.id)) {
     localStorage.setItem("history", JSON.stringify(updatedHistory));
   }
-  console.log("Selected result:", result.Title, result.id);
+  console.log("Selected result:", result.title, result.id);
   isLoading.value = true;
   error.value = null;
   bookFile.value = null;
   downloadProgress.value = 0;
 
-  const filename = sanitize(
-    `${result.Author} - ${result.Title}.${result.Extension}`,
-  );
+  const filename = sanitize(`${result.author} - ${result.title}.${result.ext}`);
 
   directLink.value = false;
   bookURL.value = getBookURL(result, filename);
