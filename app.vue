@@ -114,7 +114,7 @@ footer {
 }
 </style>
 
-<script setup>
+<script setup lang="ts">
 import sanitize from "sanitize-filename";
 const appConfig = useAppConfig();
 import { createDbWorker } from "sql.js-httpvfs";
@@ -136,7 +136,7 @@ const ipfsGateway = useLocalStorage("ipfsGateway", "ipfs.io");
 
 const searchQuery = useState("searchQuery", () => "");
 const isLoading = useState("isLoading", () => false);
-const directLink = useState("directLink", () => "");
+const directLink = useState("directLink", () => false);
 const view = useState("view", () => "welcome");
 const darkMode = useState("darkMode", () => false);
 const bookURL = useState("bookURL", () => "");
@@ -281,10 +281,81 @@ const fetchResults = async (query) => {
   }
 };
 
-const getBookURL = (result, filename) =>
-  appConfig.ipfsGateways[ipfsGateway.value].url
-    .replaceAll("${cid}", result.ipfs_cid)
-    .replaceAll("${filename}", filename);
+const downloadUrls = (urls: string[], contentLength: number): Promise<Blob> => {
+  const controller = new AbortController();
+  const signal = controller.signal;
+
+  const downloads = urls.map((url) =>
+    fetch(url, { signal }).then((response) => {
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.body) throw new Error("Response body is null");
+
+      const reader = response.body.getReader();
+      let receivedLength = 0;
+      const chunks: Uint8Array[] = [];
+
+      return {
+        read: async function () {
+          while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) {
+              break;
+            }
+
+            chunks.push(value);
+            receivedLength += value.length;
+            const progress = (receivedLength / contentLength) * 100;
+            if (progress > downloadProgress.value) {
+              downloadProgress.value = progress;
+            }
+
+            if (downloadProgress.value >= 100) {
+              controller.abort();
+              break;
+            }
+          }
+
+          return new Blob(chunks, {
+            type:
+              response.headers.get("content-type") ||
+              "application/octet-stream",
+          });
+        },
+        contentType:
+          response.headers.get("content-type") || "application/octet-stream",
+      };
+    }),
+  );
+
+  return new Promise((resolve, reject) => {
+    let completedDownloads = 0;
+    let failedDownloads = 0;
+
+    downloads.forEach(async (download) => {
+      try {
+        const { read, contentType } = await download;
+        const blob = await read();
+        resolve(new Blob([blob], { type: contentType }));
+        controller.abort(); // Cancel other ongoing downloads
+      } catch (error) {
+        failedDownloads++;
+        if (failedDownloads === urls.length) {
+          reject(new Error("All downloads failed"));
+        }
+      } finally {
+        completedDownloads++;
+        if (
+          completedDownloads === urls.length &&
+          failedDownloads === urls.length
+        ) {
+          reject(new Error("All downloads failed"));
+        }
+      }
+    });
+  });
+};
 
 const handleClick = async (result) => {
   lastResult.value = result;
@@ -300,66 +371,43 @@ const handleClick = async (result) => {
   bookFile.value = null;
   downloadProgress.value = 0;
 
-  const filename = sanitize(`${result.author} - ${result.title}.${result.ext}`);
-
-  directLink.value = false;
-  bookURL.value = getBookURL(result, filename);
+  const filename = sanitize(
+    `${result.author} - ${result.title}.${result.ext}`.trim(),
+  );
 
   try {
-    const response = await fetch(bookURL.value);
+    const urls = [
+      "https://ipfs.io",
+      "https://flk-ipfs.xyz",
+      "https://ipfs.cyou",
+      "https://storry.tv",
+      "https://dweb.link",
+      "https://gateway.pinata.cloud",
+      "https://ipfs.runfission.com",
+      "https://nftstorage.link",
+      "https://4everland.io",
+      "https://w3s.link",
+      "http://localhost:8080",
+    ].map((u) => `${u}/ipfs/${result.ipfs_cid}`);
 
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
+    bookURL.value = urls[0];
 
-    const reader = response.body.getReader();
-    const contentLength = result.Filesize;
-
-    let receivedLength = 0;
-    let chunks = [];
-
-    while (true) {
-      const { done, value } = await reader.read();
-
-      if (done) {
-        break;
-      }
-
-      chunks.push(value);
-      isLoading.value = false;
-      receivedLength += value.length;
-      downloadProgress.value = (receivedLength / contentLength) * 100;
-    }
-
-    let chunksAll = new Uint8Array(receivedLength);
-    let position = 0;
-    for (let chunk of chunks) {
-      chunksAll.set(chunk, position);
-      position += chunk.length;
-    }
+    const blob = await downloadUrls(urls, result.size);
+    bookFile.value = new File([blob], filename, {
+      type: blob.type,
+      lastModified: new Date().getTime(),
+    });
+    console.log("Download completed");
 
     const { fraction } = updatedHistory.find((b) =>
       bookURL.value.includes(result.ipfs_cid),
     );
     bookProgress.value = fraction;
-
-    // Create a Blob from the Uint8Array
-    const blob = new Blob([chunksAll], {
-      type: response.headers.get("content-type"),
-    });
-
-    // Create a File object from the Blob
-    // bookFile.value = new File([blob], filename, {
-    bookFile.value = new File([blob], "blabla.epub", {
-      type: response.headers.get("content-type"),
-      lastModified: new Date().getTime(),
-    });
-
-    console.log("Download completed");
   } catch (error) {
     console.error("Download failed:", error);
     view.value = "error";
     error.value = error;
+    return;
   } finally {
     isLoading.value = false;
   }

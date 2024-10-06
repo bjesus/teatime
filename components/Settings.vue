@@ -55,41 +55,6 @@
     >
       Show all
     </button>
-    <h2>IPFS Gateway</h2>
-    <p>Please choose a TeaTime compatible database to search in.</p>
-    <table>
-      <thead>
-        <tr>
-          <th class="center">Active</th>
-          <th>Name</th>
-          <th>Description</th>
-          <td></td>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="(gateway, value) of appConfig.ipfsGateways"
-          @click="setGateway(value)"
-          :class="{ active: ipfsGateway === value }"
-        >
-          <td class="center">
-            <input
-              type="radio"
-              name="ipfsGateway"
-              :checked="ipfsGateway === value"
-              @click="setGateway(value)"
-            />
-          </td>
-          <td>{{ gateway.name }}</td>
-          <td>{{ gateway.description }}</td>
-          <td class="right">
-            <a :href="gateway.info" target="_blank">
-              <LucideExternalLink />
-            </a>
-          </td>
-        </tr>
-      </tbody>
-    </table>
   </div>
 </template>
 
@@ -166,7 +131,6 @@ const showAllRemotes = ref(false);
 const remotes = ref([]);
 const remote = useLocalStorage("remote");
 const remoteConfig = useLocalStorage("remoteConfig");
-const ipfsGateway = useLocalStorage("ipfsGateway");
 
 const remotesList = computed(() => {
   return showAllRemotes.value ? remotes.value : remotes.value.slice(0, 5);
@@ -193,9 +157,5 @@ const setRemote = async (selection) => {
   const config = await response.json();
   remoteConfig.value = JSON.stringify(config);
   remote.value = selection.full_name;
-};
-
-const setGateway = async (gateway) => {
-  ipfsGateway.value = gateway;
 };
 </script>
