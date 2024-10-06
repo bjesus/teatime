@@ -46,7 +46,12 @@
       </div>
     </div>
     <footer>
-      <span>website doesn't use cookies. Your data is saved locally.</span>
+      <span
+        >{{ title }} is an instance of
+        <a href="https://github.com/teatime-library/teatime" target="_blank"
+          >TeaTime</a
+        >, a distributed, static, cookie-less system for reading books over IPFS
+      </span>
     </footer>
   </main>
 </template>
@@ -91,7 +96,7 @@ main {
 
 #content {
   grid-area: 2 / 1 / 3 / 2;
-  overflow: scroll;
+  overflow: auto;
 
   &.drag-over {
     border: 10px dashed red;
