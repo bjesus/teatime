@@ -116,7 +116,7 @@ footer {
 
 <script setup>
 import sanitize from "sanitize-filename";
-import appConfig from "./teatime.config.ts";
+const appConfig = useAppConfig();
 import { createDbWorker } from "sql.js-httpvfs";
 import { useLocalStorage } from "@vueuse/core";
 
@@ -126,6 +126,10 @@ const workerUrl = new URL(
 );
 const wasmUrl = new URL("sql.js-httpvfs/dist/sql-wasm.wasm", import.meta.url);
 
+const defaultColumns = Object.fromEntries(
+  ["title", "author", "ext", "lang"].map((x) => [x, x]),
+);
+
 const remote = useLocalStorage("remote", null);
 const remoteConfig = useLocalStorage("remoteConfig", null);
 const ipfsGateway = useLocalStorage("ipfsGateway", "ipfs.io");
@@ -133,19 +137,19 @@ const ipfsGateway = useLocalStorage("ipfsGateway", "ipfs.io");
 const searchQuery = useState("searchQuery", () => "");
 const isLoading = useState("isLoading", () => false);
 const directLink = useState("directLink", () => "");
-const results = useState("results", () => []);
 const view = useState("view", () => "welcome");
 const darkMode = useState("darkMode", () => false);
 const bookURL = useState("bookURL", () => "");
-const lastResult = useState("lastResult", () => null);
-const error = useState("error", () => null);
-const downloadProgress = useState("downloadProgress", () => 0);
-const bookFile = ref(null);
-const isDragging = ref(false);
-const bookProgress = ref(0);
 const title = useState("title", () => appConfig.title);
 const icon = useState("icon", () => appConfig.icon);
 
+const results = ref([]);
+const lastResult = ref(null);
+const error = ref(null);
+const downloadProgress = ref(0);
+const bookFile = ref(null);
+const isDragging = ref(false);
+const bookProgress = ref(0);
 const booksList = computed(() => {
   return view.value === "history"
     ? JSON.parse(localStorage.getItem("history") || "[]")
@@ -153,9 +157,17 @@ const booksList = computed(() => {
 });
 
 const setResults = (books) => {
-  const { images } = JSON.parse(remoteConfig.value);
+  const { images, columns } = JSON.parse(remoteConfig.value);
   results.value = books.map((b) => {
-    b.Coverurl = images.replace("${ipfs_cid}", b.ipfs_cid);
+    for (const key of Object.keys(columns)) {
+      b[key] = b[columns[key]];
+      delete b[columns[key]];
+    }
+    b.image_url = images
+      .replaceAll("${id}", b.id)
+      .replaceAll("${md5}", b.md5)
+      .replaceAll("${ipfs_cid}", b.ipfs_cid)
+      .replaceAll("${id_group}", Math.floor(b.id / 1000) * 1000);
     return b;
   });
 };
@@ -200,13 +212,19 @@ const fetchResults = async (query) => {
 
   let maxBytesToRead = 10 * 1024 * 1024;
 
+  const {
+    dbConfig,
+    tableName = "updated_data",
+    columns = defaultColumns,
+  } = JSON.parse(remoteConfig.value);
+
   try {
     console.log("Connecting to the database...");
     const worker = await createDbWorker(
       [
         {
           from: "inline",
-          config: JSON.parse(remoteConfig.value).dbConfig,
+          config: dbConfig,
         },
       ],
       workerUrl.toString(),
@@ -217,29 +235,31 @@ const fetchResults = async (query) => {
     console.log("Making the query...");
     if (query.length > 3) {
       dbResult = await worker.db.exec(
-        `SELECT * FROM updated_data
+        `SELECT * FROM ${tableName}
           WHERE id IN (
-          SELECT rowid FROM updated_data_fts
-          WHERE updated_data_fts MATCH ? )
+          SELECT rowid FROM ${tableName}_fts
+          WHERE ${tableName}_fts MATCH ? )
           LIMIT 10;`,
-        [`Title:${query}* OR Author:${query}*`],
+        [`${columns.title}:${query}* OR ${columns.author}:${query}*`],
       );
     } else {
       const params = [];
       if (query.title && query.author)
-        params.push(`Title:${query.title} AND Author:${query.author}`);
-      else if (query.author) params.push(`Author:${query.author}`);
-      else params.push(`Title:${query.title}`); // we must have either title or author
+        params.push(
+          `${columns.title}:${query.title} AND ${columns.author}:${query.author}`,
+        );
+      else if (query.author) params.push(`${columns.author}:${query.author}`);
+      else params.push(`${columns.title}:${query.title}`); // we must have either title or author
 
       if (query.lang) params.push(query.lang);
       if (query.ext) params.push(query.ext);
       dbResult = await worker.db.exec(
         `
-          SELECT updated_data.* FROM updated_data
-          JOIN updated_data_fts ON updated_data.id = updated_data_fts.rowid
-          WHERE updated_data_fts MATCH ?
-          ${query.lang ? " AND Language = ? " : ""}
-          ${query.ext ? " AND Extension = ? " : ""}
+          SELECT ${tableName}.* FROM ${tableName}
+          JOIN ${tableName}_fts ON ${tableName}.id = ${tableName}_fts.rowid
+          WHERE ${tableName}_fts MATCH ?
+          ${query.lang ? ` AND ${columns.lang} = ? ` : ""}
+          ${query.ext ? ` AND ${columns.ext} = ? ` : ""}
           LIMIT 10;`,
         params,
       );
@@ -261,6 +281,11 @@ const fetchResults = async (query) => {
   }
 };
 
+const getBookURL = (result, filename) =>
+  appConfig.ipfsGateways[ipfsGateway.value].url
+    .replaceAll("${cid}", result.ipfs_cid)
+    .replaceAll("${filename}", filename);
+
 const handleClick = async (result) => {
   lastResult.value = result;
   view.value = "book";
@@ -279,8 +304,8 @@ const handleClick = async (result) => {
     `${result.Author} - ${result.Title}.${result.Extension}`,
   );
 
-  directLink.value = appConfig.getDirectLink(result, filename);
-  bookURL.value = appConfig.getBookURL(result, filename);
+  directLink.value = false;
+  bookURL.value = getBookURL(result, filename);
 
   try {
     const response = await fetch(bookURL.value);

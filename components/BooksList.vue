@@ -7,22 +7,20 @@
         @click="onBookClick(result)"
       >
         <img
-          v-if="result.Coverurl"
-          :src="result.Coverurl"
+          v-if="result.image_url"
+          :src="result.image_url"
           referrerpolicy="no-referrer"
         />
         <div>
-          <h2 :title="result.Title">{{ result.Title }}</h2>
-          <h3>{{ result.Author }}, {{ result.Year }}</h3>
+          <h2 :title="result.title">{{ result.title }}</h2>
+          <h3>{{ result.author }}, {{ result.year }}</h3>
+          <span class="ext"><LucideFile :size="12" /> {{ result.ext }}</span>
           <span class="ext"
-            ><LucideFile :size="12" /> {{ result.Extension }}</span
-          >
-          <span class="ext"
-            ><LucideLanguages :size="12" />{{ result.Language }}</span
+            ><LucideLanguages :size="12" />{{ result.lang }}</span
           >
           <span class="ext"
             ><LucideArrowBigDownDash :size="12" />
-            {{ prettyBytes(result.Filesize) }}</span
+            {{ prettyBytes(result.size) }}</span
           >
           <meter min="0" max="1" :value="result.fraction" />
         </div>

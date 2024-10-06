@@ -1,7 +1,9 @@
 <template>
   <div id="settings">
     <h2>Database</h2>
-    <p>Please choose a TeaTime compatible database to search in.</p>
+    <p :class="{ info: !remote }">
+      Please choose a database for TeaTime to search in
+    </p>
     <table>
       <thead>
         <tr>
@@ -9,12 +11,13 @@
           <th class="center">⭐</th>
           <th>Name</th>
           <th>Description</th>
+          <th>Updated</th>
           <td></td>
         </tr>
       </thead>
       <tbody>
         <tr
-          v-for="item in remotes"
+          v-for="item in remotesList"
           :class="{ active: item.full_name === remote }"
           @click="setRemote(item)"
         >
@@ -35,6 +38,9 @@
           <td>
             {{ item.description }}
           </td>
+          <td>
+            {{ item.updated_at.slice(0, 10) }}
+          </td>
           <td class="right">
             <a :href="'https://github.com/' + item.full_name" target="_blank">
               <LucideExternalLink />
@@ -43,6 +49,12 @@
         </tr>
       </tbody>
     </table>
+    <button
+      v-if="remotes.length > 5 && !showAllRemotes"
+      @click="showAllRemotes = true"
+    >
+      Show all
+    </button>
     <h2>IPFS Gateway</h2>
     <p>Please choose a TeaTime compatible database to search in.</p>
     <table>
@@ -56,16 +68,16 @@
       </thead>
       <tbody>
         <tr
-          :class="{ active: ipfsGateway === gateway.value }"
-          @click="setGateway(gateway.value)"
-          v-for="gateway in appConfig.ipfsGateways"
+          v-for="(gateway, value) of appConfig.ipfsGateways"
+          @click="setGateway(value)"
+          :class="{ active: ipfsGateway === value }"
         >
           <td class="center">
             <input
               type="radio"
               name="ipfsGateway"
-              :checked="ipfsGateway === gateway.value"
-              @click="setGateway(item)"
+              :checked="ipfsGateway === value"
+              @click="setGateway(value)"
             />
           </td>
           <td>{{ gateway.name }}</td>
@@ -89,6 +101,11 @@
 
   table {
     width: 100%;
+    border: 0;
+
+    tr {
+      cursor: pointer;
+    }
 
     th {
       text-align: left;
@@ -108,12 +125,35 @@
     td {
       margin: 0.5rem 0;
       padding: 0.5rem;
+      vertical-align: top;
     }
 
     tr.active {
-      box-shadow: 0px 0px 2px 2px #ccc;
+      box-shadow: 0px 0px 1px 1px rgba(0, 255, 0, 0.3);
       border-radius: 1rem;
+      background-color: rgba(0, 255, 0, 0.05);
     }
+  }
+
+  table:has(tr:hover) tr:not(:hover) td {
+    color: gray;
+  }
+
+  p.info {
+    color: darkred;
+    background-color: rgba(255, 0, 0, 0.05);
+    padding: 1rem;
+    border: 1px solid red;
+    border-radius: 1rem;
+
+    &::before {
+      content: "ℹ️ ";
+    }
+  }
+
+  button {
+    display: block;
+    margin: 1rem auto 2rem;
   }
 }
 </style>
@@ -122,10 +162,15 @@
 import { useLocalStorage } from "@vueuse/core";
 const appConfig = useAppConfig();
 
+const showAllRemotes = ref(false);
 const remotes = ref([]);
 const remote = useLocalStorage("remote");
 const remoteConfig = useLocalStorage("remoteConfig");
 const ipfsGateway = useLocalStorage("ipfsGateway");
+
+const remotesList = computed(() => {
+  return showAllRemotes.value ? remotes.value : remotes.value.slice(0, 5);
+});
 
 const updateRemotes = async () => {
   const response = await fetch(
@@ -141,7 +186,6 @@ onMounted(async () => {
 });
 
 const setRemote = async (selection) => {
-  console.log(selection.full_name);
   const [owner, repo] = selection.full_name.split("/");
   const response = await fetch(
     `https://${owner}.github.io/${repo}/config.json`,
@@ -149,7 +193,6 @@ const setRemote = async (selection) => {
   const config = await response.json();
   remoteConfig.value = JSON.stringify(config);
   remote.value = selection.full_name;
-  console.log(config);
 };
 
 const setGateway = async (gateway) => {
