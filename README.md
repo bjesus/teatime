@@ -1,77 +1,19 @@
-See demo at https://teatime-library.netlify.app/ 
+<h1 align="center">
+Teatime
+</h1>
 
-# Nuxt 3 Minimal Starter
+<p align="center">
+Teatime is a fully static distributed library system powered by IPFS, SQLite and Github
+</p>
+<p align="center">
+<img src="https://github.com/user-attachments/assets/caacdcde-8ad9-49af-915f-c93a52c7bf11" height="300"> <br/>
+Auto-updating instances are hosted on <a href="https://teatime-library.netlify.app/">Netlify</a> and <a href="https://bjesus.github.io/teatime/">Github Pages</a>
+</p>
 
-Look at the [Nuxt 3 documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+## Develop
 
-## Setup
+1. Install the dependencies: `npm install`
+2. Run the server: `npm run dev`
+3. Navigate to `http://localhost:3000`
 
-Make sure to install the dependencies:
-
-```bash
-# npm
-npm install
-
-# pnpm
-pnpm install
-
-# yarn
-yarn install
-
-# bun
-bun install
-```
-
-## Development Server
-
-Start the development server on `http://localhost:3000`:
-
-```bash
-# npm
-npm run dev
-
-# pnpm
-pnpm run dev
-
-# yarn
-yarn dev
-
-# bun
-bun run dev
-```
-
-## Production
-
-Build the application for production:
-
-```bash
-# npm
-npm run build
-
-# pnpm
-pnpm run build
-
-# yarn
-yarn build
-
-# bun
-bun run build
-```
-
-Locally preview production build:
-
-```bash
-# npm
-npm run preview
-
-# pnpm
-pnpm run preview
-
-# yarn
-yarn preview
-
-# bun
-bun run preview
-```
-
-Check out the [deployment documentation](https://nuxt.com/docs/getting-started/deployment) for more information.
+Check out the [Nuxt documentation](https://nuxt.com/docs/getting-started) for more information.
