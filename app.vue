@@ -195,7 +195,7 @@ const downloadBook = () => {
   const url = URL.createObjectURL(bookFile.value);
   const b = lastResult.value;
   link.href = url;
-  link.download = sanitize(`${b.Author} - ${b.Title}.${b.Extension}`);
+  link.download = sanitize(`${b.author} - ${b.title}.${b.ext}`);
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
