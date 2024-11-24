@@ -18,7 +18,7 @@
           <span class="ext"
             ><LucideLanguages :size="12" />{{ result.lang }}</span
           >
-          <span class="ext"
+          <span v-if="result.size" class="ext"
             ><LucideArrowBigDownDash :size="12" />
             {{ prettyBytes(result.size) }}</span
           >

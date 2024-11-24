@@ -1,8 +1,9 @@
 <template>
   <div id="settings">
     <h2>Database</h2>
-    <p :class="{ info: !remote }">
-      Please choose a database for TeaTime to search in
+    <p class="info" v-if="!remote">
+      Welcome! Before you can search, please choose which database you would
+      like to query
     </p>
     <table>
       <thead>
@@ -66,7 +67,7 @@
 
   table {
     width: 100%;
-    border: 0;
+    border-collapse: collapse;
 
     tr {
       cursor: pointer;
@@ -105,14 +106,14 @@
   }
 
   p.info {
-    color: darkred;
-    background-color: rgba(255, 0, 0, 0.05);
+    color: darkblue;
+    background-color: rgba(0, 0, 255, 0.05);
     padding: 1rem;
-    border: 1px solid red;
+    border: 1px solid blue;
     border-radius: 1rem;
 
     &::before {
-      content: "ℹ️ ";
+      content: "👋 ";
     }
   }
 
