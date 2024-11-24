@@ -124,6 +124,7 @@ import sanitize from "sanitize-filename";
 const appConfig = useAppConfig();
 import { createDbWorker } from "sql.js-httpvfs";
 import { useLocalStorage } from "@vueuse/core";
+import { getFile, saveFile } from "./indexdb";
 
 useHead({
   title: appConfig.title,
@@ -155,7 +156,9 @@ const ipfsGateway = useLocalStorage("ipfsGateway", "ipfs.io");
 const searchQuery = useState("searchQuery", () => "");
 const isLoading = useState("isLoading", () => false);
 const directLink = useState("directLink", () => false);
-const view = useState("view", () => "welcome");
+const view = useState("view", () =>
+  remoteConfig.value ? "welcome" : "settings",
+);
 const darkMode = useState("darkMode", () => false);
 const bookURL = useState("bookURL", () => "");
 const title = useState("title", () => appConfig.title);
@@ -285,6 +288,7 @@ const fetchResults = async (query) => {
     }
 
     console.log("Gathering results...");
+    console.log(dbResult);
     setResults(
       dbResult[0].values.map((line) =>
         Object.assign(
@@ -411,13 +415,19 @@ const handleClick = async (result) => {
 
     bookURL.value = urls[0];
 
-    const blob = await downloadUrls(urls, result.size);
-    bookFile.value = new File([blob], filename, {
-      type: blob.type,
-      lastModified: new Date().getTime(),
-    });
-    console.log("Download completed");
-
+    const retrievedFile = await getFile(result.ipfs_cid);
+    if (retrievedFile) {
+      console.log("Got file from IndexDB");
+      bookFile.value = retrievedFile;
+    } else {
+      const blob = await downloadUrls(urls, result.size);
+      bookFile.value = new File([blob], filename, {
+        type: blob.type,
+        lastModified: new Date().getTime(),
+      });
+      console.log("Download completed");
+      await saveFile(bookFile.value, result.ipfs_cid);
+    }
     const { fraction } = updatedHistory.find((b) =>
       bookURL.value.includes(result.ipfs_cid),
     );
