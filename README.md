@@ -29,7 +29,7 @@ Check out the [Nuxt documentation](https://nuxt.com/docs/getting-started) for mo
 ## Creating a Database
 
 > [!TIP]
-> The easiest way to create your own database is by forking the [JSON-based database repository](https://github.com/bjesus/teatime-database/) and adjusting the JSON files according to your needs. GitHub Actions will then generate an SQLite file and upload it to GitHub Pages.
+> The easiest way to create your own database is by forking the [JSON-based database repository](https://github.com/bjesus/teatime-json-database/) and adjusting the JSON files according to your needs. GitHub Actions will then generate an SQLite file and upload it to GitHub Pages.
 
 To manually generate an SQLite database that Teatime can work with, follow the example on [the database repository](https://github.com/bjesus/teatime-database/).
 
