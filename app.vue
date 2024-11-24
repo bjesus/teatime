@@ -184,7 +184,7 @@ const setResults = (books) => {
     b.image_url = images
       .replaceAll("${id}", b.id)
       .replaceAll("${md5}", b.md5)
-      .replaceAll("${md5_lowercse}", b.md5.toLowerCase())
+      .replaceAll("${md5_lowercse}", b.md5?.toLowerCase())
       .replaceAll("${ipfs_cid}", b.ipfs_cid)
       .replaceAll("${id_group}", Math.floor(b.id / 1000) * 1000);
     return b;
