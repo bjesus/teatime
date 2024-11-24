@@ -7,7 +7,7 @@ Teatime is a fully static distributed library system powered by IPFS, SQLite, an
 </p>
 <p align="center">
 <img src="https://github.com/user-attachments/assets/caacdcde-8ad9-49af-915f-c93a52c7bf11" height="300"> <br/>
-Auto-updating instances are hosted on <a href="https://teatime-library.netlify.app/">Netlify</a> and <a href="https://bjesus.github.io/teatime/">GitHub Pages</a>
+Auto-updating instances are hosted on <a href="https://teatime-library.netlify.app/">Netlify</a> and <a href="https://bjesus.github.io/teatime/">GitHub Pages</a>. See <a href="https://github.com/bjesus/teatime/wiki/Public-instances">Public Instances</a> for more.
 </p>
 
 # A Distributed Library
