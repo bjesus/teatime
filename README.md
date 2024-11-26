@@ -19,10 +19,10 @@ Since the web application is a static site, and the databases are comprised of s
 ## Features
 
 - Search by title, author, year or format 
+- Reading history
 - Download files locally
-- History
-- Cache filess in IndexedDB for fast loading
-- Drop files on TeaTime to open a local file
+- Cache files in IndexedDB for fast loading
+- Drop files on TeaTime to render them
 - Dark mode and full screen mode
 - No cookies, no login
 - **...Completely distributed**
