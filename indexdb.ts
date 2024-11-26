@@ -1,4 +1,4 @@
-const dbName = "TeatimeStorage";
+const dbName = "TeaTimeStorage";
 const dbVersion = 1;
 const storeName = "files";
 
