@@ -26,8 +26,16 @@
         </div>
       </li>
     </ul>
-    <p v-else-if="isLoading">Searching...</p>
+    <p v-else-if="isLoading">Searching {{ remote }}...</p>
     <p v-else>No results</p>
+    <button
+      v-if="booksList.length && paginate"
+      @click="
+        () => onFetchResults(JSON.parse(lastQuery), offset + 1) && offset++
+      "
+    >
+      More
+    </button>
   </div>
 </template>
 
@@ -82,6 +90,13 @@ ul {
   }
 }
 
+button {
+  margin: auto;
+  display: flex;
+  padding: 0.5rem 1rem;
+  margin-bottom: 1rem;
+}
+
 p {
   display: flex;
   height: 100%;
@@ -108,6 +123,7 @@ span.ext {
 
 <script setup>
 import prettyBytes from "pretty-bytes";
+import { useLocalStorage } from "@vueuse/core";
 
 defineProps({
   isLoading: {
@@ -122,5 +138,21 @@ defineProps({
     type: Function,
     required: true,
   },
+  paginate: {
+    type: Boolean,
+    required: false,
+  },
+  onFetchResults: {
+    type: Function,
+    required: false,
+  },
+});
+
+const remote = useLocalStorage("remote", null);
+const lastQuery = useLocalStorage("lastQuery", null);
+const offset = useState("offset", () => 0);
+
+onMounted(async () => {
+  offset.value = 0;
 });
 </script>
