@@ -14,6 +14,7 @@
     >
       <AdvancedSearch v-if="view === 'search'" :onFetchResults="fetchResults" />
       <Settings v-if="view === 'settings'" />
+      <Instances v-if="view === 'instances'" />
 
       <Error
         v-if="view === 'error'"
@@ -33,6 +34,8 @@
         :booksList="results"
         :isLoading="isLoading"
         :onBookClick="handleClick"
+        :paginate="true"
+        :onFetchResults="fetchResults"
         v-if="view === 'results'"
       />
       <BooksList
@@ -50,7 +53,9 @@
         >{{ title }} is an instance of
         <a href="https://github.com/teatime-library/teatime" target="_blank"
           >TeaTime</a
-        >, a distributed, static, cookie-less system for reading books over IPFS
+        >, a distributed, static, cookie-less system for reading books over
+        IPFS. There are also
+        <a href="#" @click="() => (view = 'instances')">other instances</a>.
       </span>
     </footer>
   </main>
@@ -152,6 +157,7 @@ const defaultColumns = Object.fromEntries(
 );
 
 const remote = useLocalStorage("remote", null);
+const lastQuery = useLocalStorage("lastQuery", null);
 const remoteConfig = useLocalStorage("remoteConfig", null);
 const ipfsGateway = useLocalStorage("ipfsGateway", "ipfs.io");
 
@@ -211,7 +217,8 @@ const handleDrop = (event) => {
   }
 };
 
-const fetchResults = async (query) => {
+const fetchResults = async (query, offset = 0) => {
+  lastQuery.value = JSON.stringify(query);
   if (!remote.value) {
     console.log("you have to choose a remote");
     view.value = "settings";
@@ -251,14 +258,18 @@ const fetchResults = async (query) => {
       maxBytesToRead, // optional, defaults to Infinity
     );
 
+    const perPage = 10;
+    const limitOffset = `LIMIT ${perPage * offset}, ${perPage}`;
+
     console.log("Making the query...");
     if (query.length > 3) {
       dbResult = await worker.db.exec(
         `SELECT * FROM ${tableName}
           WHERE id IN (
-          SELECT rowid FROM ${tableName}_fts
-          WHERE ${tableName}_fts MATCH ? )
-          LIMIT 10;`,
+            SELECT rowid FROM ${tableName}_fts
+            WHERE ${tableName}_fts MATCH ?
+            ${limitOffset}
+          );`,
         [`${columns.title}:${query}* OR ${columns.author}:${query}*`],
       );
     } else {
@@ -279,7 +290,7 @@ const fetchResults = async (query) => {
           WHERE ${tableName}_fts MATCH ?
           ${query.lang ? ` AND ${columns.lang} = ? ` : ""}
           ${query.ext ? ` AND ${columns.ext} = ? ` : ""}
-          LIMIT 10;`,
+          ${limitOffset};`,
         params,
       );
     }
