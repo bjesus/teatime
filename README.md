@@ -19,7 +19,7 @@ Since the web application is a static site, and the databases are comprised of s
 ## Features
 
 - Search by title, author, year or format 
-- Reading history
+- Maintain reading history, and return to page when re-opening file
 - Download files locally
 - Cache files in IndexedDB for fast loading
 - Drop files on TeaTime to render them
