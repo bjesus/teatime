@@ -14,7 +14,7 @@ Auto-updating instances are hosted on <a href="https://teatime-library.netlify.a
 
 The TeaTime web application is completely decoupled from its databases and the files it fetches. The databases used in TeaTime are [GitHub repositories tagged with the teatime-database topic](https://github.com/search?q=topic%3Ateatime-database&type=repositories), which are published on GitHub Pages. Each repository contains a [config.json](https://github.com/bjesus/teatime-database/blob/main/config.json) file that points to an SQLite database. Before a user performs a search in TeaTime, they choose which database to use and then TeaTime queries the SQLite database using [sql.js-httpvfs](https://github.com/phiresky/sql.js-httpvfs). Each row in the SQLite database is an item in the library, and a file hash column is used for getting the item from IPFS.
 
-Since the web application is a static site, and the databases are comprised of static files, both can be easily forked, replicated, and deployed. With the files being served off IPFS, this distributed architecture contributes to TeaTime's resilience.
+Since the web application is a static site, and the databases are comprised of static files, both can be easily forked, replicated, and deployed. Frontend instances are [GitHub repositories tagged with the teatime-instance topic](https://github.com/search?q=topic%3Ateatime-instance&type=repositories). With the files being served off IPFS, this distributed architecture contributes to TeaTime's resilience.
 
 ## Features
 
