@@ -87,29 +87,16 @@ const getCSS = (style) => [
 
 const getRendition = async (rendition) => {
   const { book, renderer } = rendition;
-  renderer.setStyles(getCSS());
-  // console.log("but here it is", rendition.goToFraction);
-  // const history = JSON.parse(localStorage.getItem("history"));
-  // const { fraction } = history.find((b) => props.bookURL.includes(b.ipfs_cid));
-  // console.log(rendition);
-  // if (fraction) {
-  //   console.log("trying to go to ", fraction);
-  //   const what = rendition.goToFraction(fraction);
-  //   console.log(what);
-  //   console.log("done");
-  // }
+  renderer.setStyles?.(getCSS());
+  const history = JSON.parse(localStorage.getItem("history"));
+  const { fraction } = history.find((b) => props.bookURL.includes(b.ipfs_cid));
+  if (fraction) {
+    const what = await rendition.goToFraction(fraction);
+    rendition.prev(); // for some reason we're always jumping one page too far
+  }
 };
 
 const onBookProgress = async (progress) => {
-  console.log(progress);
-  // if (progress.location.current === 0) {
-  //   console.log("jumping!");
-  //   console.log(view);
-  //   await view.goToFraction(0.11215467001850396);
-  //   console.log("or not");
-  //   return;
-  // }
-  // console.log("not jumping");
   const history = JSON.parse(localStorage.getItem("history"));
   for (const i in history) {
     if (props.bookURL.includes(history[i].ipfs_cid)) {
