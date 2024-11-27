@@ -119,7 +119,7 @@ footer {
     background-position: 0 0;
   }
   100% {
-    background-position: 40px 0; /* Adjust as needed for the speed */
+    background-position: 100% 0; /* Adjust as needed for the speed */
   }
 }
 </style>
