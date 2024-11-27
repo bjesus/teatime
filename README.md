@@ -68,4 +68,4 @@ If the SQLite file is too big, you can [split it](https://github.com/phiresky/sq
 
 Even if you cannot code, a great way to contribute is to simply fork this repository, as well as your favorite database repositories. If you fork the repository, it could be better to do it manually (`git clone` && `git remote add your-origin ...` && `git push your-origin main`) so that the repositories won't be directly linked.
 
-It's also useful to star the database repositories you find useful, as this determines their order in the TeaTime user interface, making it easier for other users to find the best databases.
+It's also a good practice to star the database repositories you find useful, as this determines their order in the TeaTime user interface, making it easier for other users to find the best databases.
