@@ -40,7 +40,7 @@
             {{ item.description }}
           </td>
           <td>
-            {{ item.updated_at.slice(0, 10) }}
+            {{ item.updated_at?.slice(0, 10) }}
           </td>
           <td class="right">
             <a :href="'https://github.com/' + item.full_name" target="_blank">
@@ -128,6 +128,13 @@
 import { useLocalStorage } from "@vueuse/core";
 const appConfig = useAppConfig();
 
+const props = defineProps({
+  onFetchResults: {
+    type: Function,
+    required: true,
+  },
+});
+
 const showAllRemotes = ref(false);
 const remotes = ref([]);
 const remote = useLocalStorage("remote");
@@ -142,7 +149,27 @@ const updateRemotes = async () => {
     "https://api.github.com/search/repositories?q=topic:teatime-database&sort=stars&order=desc",
     // "/repos.json", // localdev
   );
-  const { items } = await response.json();
+  let { items } = await response.json();
+  // if (!items.length) {
+  //   items = [
+  //     {
+  //       full_name: "yourmargin/libgen-db",
+  //       description:
+  //         "Library Genesis Non-Fiction, metadata snapshot from archive.org",
+  //       stargazers_count: 10,
+  //     },
+  //     {
+  //       full_name: "bjesus/teatime-datase",
+  //       description: "Public domain library",
+  //       stargazers_count: 5,
+  //     },
+  //     {
+  //       full_name: "bjesus/teatime-json-datase",
+  //       description: "An example database with The Communist Manifesto",
+  //       stargazers_count: 1,
+  //     },
+  //   ];
+  // }
   remotes.value = items;
 };
 
@@ -151,12 +178,6 @@ onMounted(async () => {
 });
 
 const setRemote = async (selection) => {
-  const [owner, repo] = selection.full_name.split("/");
-  const response = await fetch(
-    `https://${owner}.github.io/${repo}/config.json`,
-  );
-  const config = await response.json();
-  remoteConfig.value = JSON.stringify(config);
-  remote.value = selection.full_name;
+  props.onFetchResults("", true, selection.full_name);
 };
 </script>

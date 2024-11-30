@@ -10,10 +10,11 @@
       @dragover.prevent="isDragging = true"
       @dragleave.prevent="isDragging = false"
       @drop.prevent="handleDrop"
+      @scroll="fetchMoreBooks"
       :class="{ 'drag-over': isDragging }"
     >
       <AdvancedSearch v-if="view === 'search'" :onFetchResults="fetchResults" />
-      <Settings v-if="view === 'settings'" />
+      <Settings v-if="view === 'settings'" :onFetchResults="fetchResults" />
       <Instances v-if="view === 'instances'" />
 
       <Error
@@ -35,7 +36,7 @@
         :isLoading="isLoading"
         :onBookClick="handleClick"
         :paginate="true"
-        :onFetchResults="fetchResults"
+        :onFetchMoreBooks="fetchMoreBooks"
         v-if="view === 'results'"
       />
       <BooksList
@@ -49,22 +50,17 @@
       </div>
     </div>
     <footer>
-      <span
-        >{{ title }} is an instance of
-        <a href="https://github.com/teatime-library/teatime" target="_blank"
-          >TeaTime</a
-        >, a distributed, static, cookie-less system for reading books over
-        IPFS. There are also
-        <a href="#" @click="() => (view = 'instances')">other instances</a>.
-      </span>
+      {{ title }} is an instance of
+      <a href="https://github.com/teatime-library/teatime" target="_blank"
+        >TeaTime</a
+      >, a distributed, static, cookie-less system for reading books over IPFS.
+      There are also
+      <a href="#" @click="() => (view = 'instances')">other instances</a>.
     </footer>
   </main>
 </template>
 
 <style>
-dialog {
-  top: 30%;
-}
 * {
   font-family: sans-serif;
 }
@@ -72,6 +68,9 @@ body,
 html {
   margin: 0;
 }
+</style>
+
+<style scoped>
 main {
   display: grid;
   grid-template-columns: 1fr;
@@ -113,15 +112,6 @@ footer {
   color: gray;
   grid-area: 3 / 1 / 4 / 2;
 }
-
-@keyframes move-stripes {
-  0% {
-    background-position: 0 0;
-  }
-  100% {
-    background-position: 100% 0; /* Adjust as needed for the speed */
-  }
-}
 </style>
 
 <script setup lang="ts">
@@ -162,6 +152,7 @@ const remoteConfig = useLocalStorage("remoteConfig", null);
 const ipfsGateway = useLocalStorage("ipfsGateway", "ipfs.io");
 
 const searchQuery = useState("searchQuery", () => "");
+const offset = useState("offset", () => 0);
 const isLoading = useState("isLoading", () => false);
 const directLink = useState("directLink", () => false);
 const view = useState("view", () =>
@@ -171,6 +162,7 @@ const darkMode = useState("darkMode", () => false);
 const bookURL = useState("bookURL", () => "");
 const title = useState("title", () => appConfig.title);
 const icon = useState("icon", () => appConfig.icon);
+const moreResults = useState("moreResults", () => false);
 
 const results = ref([]);
 const lastResult = ref(null);
@@ -185,16 +177,19 @@ const booksList = computed(() => {
     : results;
 });
 
-const setResults = (books) => {
+const setResults = (books, append) => {
   const { images = "", columns = {} } = JSON.parse(remoteConfig.value);
-  results.value = books.map((b) => {
-    for (const key of Object.keys(columns)) {
-      b[key] = b[columns[key]];
-      delete b[columns[key]];
-    }
-    b.image_url = liquid.parseAndRenderSync(images, b);
-    return b;
-  });
+  results.value = [
+    ...(append ? results.value : []),
+    ...books.map((b) => {
+      for (const key of Object.keys(columns)) {
+        b[key] = b[columns[key]];
+        delete b[columns[key]];
+      }
+      b.image_url = liquid.parseAndRenderSync(images, b);
+      return b;
+    }),
+  ];
 };
 const downloadBook = () => {
   const link = document.createElement("a");
@@ -217,23 +212,33 @@ const handleDrop = (event) => {
   }
 };
 
-const fetchResults = async (query, offset = 0) => {
+const fetchResults = async (query, reset, setRemote) => {
+  console.log("Running query", query, setRemote);
   lastQuery.value = JSON.stringify(query);
+  if (setRemote) {
+    const [owner, repo] = setRemote.split("/");
+    const response = await fetch(
+      `https://${owner}.github.io/${repo}/config.json`,
+    );
+    const config = await response.json();
+    remoteConfig.value = JSON.stringify(config);
+    remote.value = setRemote;
+    offset.value = 0;
+  }
+  if (reset) offset.value = 0;
   if (!remote.value) {
     console.log("you have to choose a remote");
     view.value = "settings";
     return;
   }
-  let complexSearch = false;
   if (view === "search") {
-    complexSearch.value = true;
     searchQuery.value = "";
   }
 
   view.value = "results";
 
   isLoading.value = true;
-  results.value = [];
+  if (!offset.value) results.value = [];
   let dbResult = [];
 
   let maxBytesToRead = 10 * 1024 * 1024;
@@ -258,41 +263,60 @@ const fetchResults = async (query, offset = 0) => {
       maxBytesToRead, // optional, defaults to Infinity
     );
 
-    const perPage = 10;
-    const limitOffset = `LIMIT ${perPage * offset}, ${perPage}`;
+    const perPage = 5;
+    const limitOffset = `LIMIT ${perPage * offset.value}, ${perPage}`;
 
     console.log("Making the query...");
-    if (query.length > 3) {
-      dbResult = await worker.db.exec(
-        `SELECT * FROM ${tableName}
+    if (typeof query === "string") {
+      if (query) {
+        dbResult = await worker.db.exec(
+          `SELECT * FROM ${tableName}
           WHERE id IN (
             SELECT rowid FROM ${tableName}_fts
             WHERE ${tableName}_fts MATCH ?
             ${limitOffset}
           );`,
-        [`${columns.title}:${query}* OR ${columns.author}:${query}*`],
-      );
+          [`${columns.title}:${query}* OR ${columns.author}:${query}*`],
+        );
+      } else {
+        dbResult = await worker.db.exec(
+          `SELECT * FROM ${tableName}
+            ${limitOffset}
+          ;`,
+          [],
+        );
+      }
     } else {
+      const whereQueries = [];
       const params = [];
-      if (query.title && query.author)
+      if (query.title && query.author) {
+        whereQueries.push(`${tableName}_fts MATCH ?`);
         params.push(
           `${columns.title}:${query.title} AND ${columns.author}:${query.author}`,
         );
-      else if (query.author) params.push(`${columns.author}:${query.author}`);
-      else params.push(`${columns.title}:${query.title}`); // we must have either title or author
+      } else if (query.author) {
+        whereQueries.push(`${tableName}_fts MATCH ?`);
+        params.push(`${columns.author}:${query.author}`);
+      } else if (query.title) {
+        whereQueries.push(`${tableName}_fts MATCH ?`);
+        params.push(`${columns.title}:${query.title}`);
+      }
 
-      if (query.lang) params.push(query.lang);
-      if (query.ext) params.push(query.ext);
-      dbResult = await worker.db.exec(
-        `
+      if (query.lang) {
+        whereQueries.push(columns.lang + " = ?");
+        params.push(query.lang);
+      }
+      if (query.ext) {
+        whereQueries.push(columns.ext + " = ?");
+        params.push(query.ext);
+      }
+      const where = params.join(" AND ");
+      const sqlQuery = `
           SELECT ${tableName}.* FROM ${tableName}
           JOIN ${tableName}_fts ON ${tableName}.id = ${tableName}_fts.rowid
-          WHERE ${tableName}_fts MATCH ?
-          ${query.lang ? ` AND ${columns.lang} = ? ` : ""}
-          ${query.ext ? ` AND ${columns.ext} = ? ` : ""}
-          ${limitOffset};`,
-        params,
-      );
+          WHERE ${whereQueries.join(" AND ")}
+          ${limitOffset};`;
+      dbResult = await worker.db.exec(sqlQuery, params);
     }
 
     console.log("Gathering results...");
@@ -304,11 +328,35 @@ const fetchResults = async (query, offset = 0) => {
           ...dbResult[0].columns.map((n, index) => ({ [n]: line[index] })),
         ),
       ),
+      !!offset.value,
     );
   } catch (e) {
     console.error("Error while searching: ", e);
   } finally {
     isLoading.value = false;
+  }
+
+  if (dbResult[0].values.length) {
+    moreResults.value = true;
+  } else {
+    moreResults.value = false;
+  }
+
+  fetchMoreBooks();
+};
+
+const fetchMoreBooks = () => {
+  const obj = document.querySelector("#content");
+
+  if (
+    (obj.scrollTopMax === 0 || // There's no scroll
+      obj.scrollTop + 1 >= obj.scrollHeight - obj.offsetHeight) && // We're at the bottom
+    !isLoading.value &&
+    view.value === "results" &&
+    moreResults.value
+  ) {
+    offset.value++;
+    fetchResults(JSON.parse(lastQuery.value));
   }
 };
 

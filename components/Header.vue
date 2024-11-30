@@ -122,6 +122,14 @@ header {
     }
   }
 }
+@keyframes move-stripes {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: 100% 0; /* Adjust as needed for the speed */
+  }
+}
 </style>
 <script setup>
 const props = defineProps({
@@ -144,7 +152,7 @@ const title = useState("title");
 const bookURL = useState("bookURL");
 
 const search = (event) => {
-  if (searchQuery.value.length > 3) props.onFetchResults(searchQuery.value);
+  props.onFetchResults(searchQuery.value, true);
 };
 
 const setFullScreen = () => {

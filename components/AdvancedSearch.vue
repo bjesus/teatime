@@ -129,11 +129,14 @@ const csExt = ref("");
 const csLang = ref("");
 
 const makeAdvancedSearch = () => {
-  props.onFetchResults({
-    title: csTitle.value,
-    author: csAuthor.value,
-    ext: csExt.value,
-    lang: csLang.value,
-  });
+  props.onFetchResults(
+    {
+      title: csTitle.value,
+      author: csAuthor.value,
+      ext: csExt.value,
+      lang: csLang.value,
+    },
+    true,
+  );
 };
 </script>
