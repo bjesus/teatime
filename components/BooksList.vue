@@ -20,6 +20,7 @@ ul {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
   gap: 1rem;
+  justify-items: center;
 }
 
 button {

@@ -54,7 +54,7 @@ header {
   grid-area: 1 / 1 / 2 / 2;
   display: grid;
   grid-template-columns: auto auto;
-  grid-template-rows: 1fr 1fr auto;
+  grid-template-rows: 1fr auto;
   grid-column-gap: 0px;
   grid-row-gap: 0px;
   grid-template-areas:
@@ -63,7 +63,7 @@ header {
 
   @media (min-width: 600px) {
     grid-template-columns: 1fr 45rem 1fr;
-    grid-template-rows: 1fr auto;
+    grid-template-rows: 1fr;
     grid-template-areas: "logo search options";
   }
 
@@ -76,6 +76,12 @@ header {
     svg {
       margin-left: 1rem;
       cursor: pointer;
+      width: 1rem;
+      height: 1rem;
+      @media (min-width: 600px) {
+        width: auto;
+        height: auto;
+      }
     }
 
     button {
