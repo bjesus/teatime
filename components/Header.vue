@@ -111,10 +111,8 @@ header {
       &.loading {
         background: repeating-linear-gradient(
           45deg,
-          #b9ebff,
-          #b9ebff 10px,
-          #acb8ff 10px,
-          #acb8ff 20px
+          #ddf5ff 100px,
+          #b0bbff 200px
         );
         background-size: calc(20px / sin(45deg)) 100%;
         animation: move-stripes 10s linear infinite;

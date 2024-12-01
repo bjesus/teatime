@@ -155,9 +155,7 @@ const searchQuery = useState("searchQuery", () => "");
 const offset = useState("offset", () => 0);
 const isLoading = useState("isLoading", () => false);
 const directLink = useState("directLink", () => false);
-const view = useState("view", () =>
-  remoteConfig.value ? "welcome" : "settings",
-);
+const view = useState("view", () => "welcome");
 const darkMode = useState("darkMode", () => false);
 const bookURL = useState("bookURL", () => "");
 const title = useState("title", () => appConfig.title);
@@ -175,6 +173,14 @@ const booksList = computed(() => {
   return view.value === "history"
     ? JSON.parse(localStorage.getItem("history") || "[]")
     : results;
+});
+
+onMounted(async () => {
+  if (!remoteConfig.value) {
+    view.value = "settings";
+  } else {
+    fetchResults("", true);
+  }
 });
 
 const setResults = (books, append) => {
