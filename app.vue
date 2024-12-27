@@ -81,7 +81,7 @@ main {
   background: white;
 
   &.dark {
-    filter: invert(1);
+    filter: invert(1) hue-rotate(180deg);
   }
 }
 
