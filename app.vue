@@ -94,6 +94,7 @@ useHead({
 
 const darkMode = useState("darkMode", () => false);
 const title = useState("title", () => appConfig.title);
+const icon = useState("icon", () => appConfig.icon); // initialized here and used on other pages
 
 const bookFile = useState("bookFile", () => null as null | File);
 const isDragging = ref(false);
