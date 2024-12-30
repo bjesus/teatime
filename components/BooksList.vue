@@ -5,10 +5,11 @@
         v-for="(result, index) in booksList"
         :key="index"
         :book="result"
-        @click="onBookClick(result)"
       />
     </ul>
-    <p v-if="isLoading">Searching {{ remote }}...</p>
+    <p v-if="isLoading">
+      Searching {{ enabledRemotes?.length || 0 }} databases...
+    </p>
     <p v-if="!isLoading && !booksList.length">No results</p>
   </div>
 </template>
@@ -54,7 +55,6 @@ span.ext {
 </style>
 
 <script setup>
-import prettyBytes from "pretty-bytes";
 import { useLocalStorage } from "@vueuse/core";
 
 defineProps({
@@ -66,19 +66,7 @@ defineProps({
     type: Array,
     required: true,
   },
-  onBookClick: {
-    type: Function,
-    required: true,
-  },
-  paginate: {
-    type: Boolean,
-    required: false,
-  },
-  onFetchMoreBooks: {
-    type: Function,
-    required: true,
-  },
 });
 
-const remote = useLocalStorage("remote", null);
+const enabledRemotes = useLocalStorage("enabledRemotes", []);
 </script>

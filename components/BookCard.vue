@@ -3,6 +3,7 @@
     <div
       class="titles"
       :style="'background-image: url(' + book.image_url + ')'"
+      @click="openBook(book)"
     >
       <h2 :title="book.title">
         <span>{{ book.title }}</span>
@@ -24,7 +25,7 @@
       <span class="ext"><LucideLanguages :size="12" />{{ book.lang }}</span>
       <span v-if="book.size" class="ext"
         ><LucideArrowBigDownDash :size="12" />
-        {{ prettyBytes(book.size) }}</span
+        {{ prettyBytes(parseInt(book.size)) }}</span
       >
     </footer>
   </li>
@@ -37,7 +38,7 @@ footer {
 
 main.dark {
   .book {
-    filter: invert(1);
+    filter: invert(1) hue-rotate(180deg);
   }
 }
 
@@ -106,4 +107,16 @@ defineProps({
     required: true,
   },
 });
+
+const openBook = (result) => {
+  const previousHistory = JSON.parse(localStorage.getItem("history") || "[]");
+  const updatedHistory = [result, ...previousHistory];
+  if (!previousHistory.find((x) => x.id === result.id)) {
+    localStorage.setItem("history", JSON.stringify(updatedHistory));
+  }
+
+  navigateTo(
+    `/open/${result.ipfs_cid}?size=${result.size}&ext=${result.ext}&author=${result.author}&title=${result.title}`,
+  );
+};
 </script>

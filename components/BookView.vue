@@ -1,8 +1,9 @@
 <template>
   <div v-if="bookURL && !bookFile" id="downloadStatus">
     <p>
-      <span v-if="downloadProgress > 0">Downloading</span
-      ><span v-else>Connecting to</span> {{ bookURL }}
+      <span v-if="downloadProgress > 0"
+        >Downloading {{ bookURL }} from IPFS...</span
+      ><span v-else>Trying to find {{ bookURL }} on IPFS...</span>
     </p>
     <progress v-if="downloadProgress" max="100" :value="downloadProgress">
       {{ downloadProgress }}%
@@ -47,8 +48,8 @@ button.arrow {
 }
 </style>
 
-<script setup>
-import { ref, onMounted } from "vue";
+<script setup lang="ts">
+import { onMounted } from "vue";
 
 const VueReader = shallowRef(null);
 
@@ -76,7 +77,7 @@ onMounted(async () => {
   VueReader.value = module.VueReader;
 });
 
-const getCSS = (style) => [
+const getCSS = () => [
   `
     html, body {
       background: #fff;
@@ -86,12 +87,12 @@ const getCSS = (style) => [
 ];
 
 const getRendition = async (rendition) => {
-  const { book, renderer } = rendition;
+  const { renderer } = rendition;
   renderer.setStyles?.(getCSS());
   const history = JSON.parse(localStorage.getItem("history"));
   const { fraction } = history.find((b) => props.bookURL.includes(b.ipfs_cid));
   if (fraction) {
-    const what = await rendition.goToFraction(fraction);
+    await rendition.goToFraction(fraction);
     rendition.prev(); // for some reason we're always jumping one page too far
   }
 };

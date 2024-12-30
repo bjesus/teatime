@@ -1,32 +1,33 @@
 <template>
   <header class="loading">
-    <h1 @click="view = 'results'">{{ icon }} {{ title }}</h1>
+    <h1 @click="navigateTo('/')">{{ icon }} {{ title }}</h1>
     <div id="options">
       <p>
-        <a @click="view = 'settings'" title="Settings">
-          <LucideSettings />
-        </a>
         <a
-          v-if="view === 'book' && !isLoading"
-          @click="onDownloadBook"
+          v-if="route.name === 'open-id' && !isLoading"
+          @click="downloadBook"
           title="Download book"
         >
           <LucideDownload />
         </a>
-        <a v-if="view === 'book'" @click="setFullScreen" title="Go full screen">
+        <a
+          v-if="route.name.startsWith('open-')"
+          @click="setFullScreen"
+          title="Go full screen"
+        >
           <LucideExpand />
         </a>
-        <a @click="view = 'history'" title="History">
+        <a @click="navigateTo('/history')" title="History">
           <LucideHistory />
         </a>
         <a
           title="Back to book"
-          v-if="view !== 'book' && bookURL"
-          @click="view = 'book'"
+          v-if="!route.name.startsWith('open-') && bookURL"
+          @click="navigateTo('/open/' + bookURL)"
         >
           <LucideBookOpen />
         </a>
-        <a @click="view = 'search'" title="Advanced Search">
+        <a @click="navigateTo('/search')" title="Advanced Search">
           <LucideSearch
         /></a>
         <a @click="darkMode = !darkMode" title="Toggle dark mode">
@@ -36,7 +37,7 @@
     </div>
     <div class="search">
       <input
-        v-if="view !== 'search'"
+        v-if="route.name !== 'search'"
         type="search"
         v-model.trim="searchQuery"
         @keyup.enter="search"
@@ -135,32 +136,42 @@ header {
   }
 }
 </style>
-<script setup>
-const props = defineProps({
-  onFetchResults: {
-    type: Function,
-    required: true,
-  },
-  onDownloadBook: {
-    type: Function,
-    required: true,
-  },
-});
+<script setup lang="ts">
+const route = useRoute();
 
-const searchQuery = ref("");
+const lastQuery = useState("lastQuery", () => "");
+const searchQuery = useState("searchQuery", () => "");
 const darkMode = useState("darkMode");
-const view = useState("view");
 const isLoading = useState("isLoading");
+const lastResult = useState("lastResult", () => null);
 const icon = useState("icon");
 const title = useState("title");
 const bookURL = useState("bookURL");
+const bookFile = useState("bookFile", () => null as null | File);
+const results = useState("results", () => []);
 
-const search = (event) => {
-  props.onFetchResults(searchQuery.value, true);
+const search = () => {
+  results.value = [];
+  lastQuery.value = searchQuery.value;
+  navigateTo("/?q=" + searchQuery.value);
 };
 
 const setFullScreen = () => {
   const content = document.getElementById("content");
-  content.requestFullscreen();
+  content?.requestFullscreen();
+};
+
+const downloadBook = () => {
+  const b = lastResult.value;
+  if (bookFile && b) {
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(bookFile.value);
+    link.href = url;
+    link.download = sanitize(`${b.author} - ${b.title}.${b.ext}`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url); // Release the URL object
+  }
 };
 </script>

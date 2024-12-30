@@ -1,9 +1,8 @@
 <template>
   <div id="settings">
     <h2>Database</h2>
-    <p class="info" v-if="!remote">
-      Welcome! Before you can search, please choose which database you would
-      like to query
+    <p class="info" v-if="!enabledRemotes.length">
+      You have to choose at least one database before you can search.
     </p>
     <table>
       <thead>
@@ -17,17 +16,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr
-          v-for="item in remotesList"
-          :class="{ active: item.full_name === remote }"
-          @click="setRemote(item)"
-        >
+        <tr v-for="item in availableRemotes" @click="toggleRemote(item)">
           <td class="center">
             <input
-              type="radio"
+              type="checkbox"
               name="remote"
-              :checked="item.full_name === remote"
-              @click="setRemote(item)"
+              :checked="enabledRemotes.includes(item.full_name)"
             />
           </td>
           <td class="center">
@@ -51,7 +45,7 @@
       </tbody>
     </table>
     <button
-      v-if="remotes.length > 5 && !showAllRemotes"
+      v-if="availableRemotes.length > 5 && !showAllRemotes"
       @click="showAllRemotes = true"
     >
       Show all
@@ -125,59 +119,23 @@
 </style>
 
 <script setup>
-import { useLocalStorage } from "@vueuse/core";
-const appConfig = useAppConfig();
-
-const props = defineProps({
-  onFetchResults: {
-    type: Function,
-    required: true,
-  },
+definePageMeta({
+  middleware: ["remotes"],
 });
+
+import { useLocalStorage } from "@vueuse/core";
 
 const showAllRemotes = ref(false);
-const remotes = ref([]);
-const remote = useLocalStorage("remote");
-const remoteConfig = useLocalStorage("remoteConfig");
+const availableRemotes = useLocalStorage("availableRemotes", []);
+const enabledRemotes = useLocalStorage("enabledRemotes", []);
 
-const remotesList = computed(() => {
-  return showAllRemotes.value ? remotes.value : remotes.value.slice(0, 5);
-});
-
-const updateRemotes = async () => {
-  const response = await fetch(
-    "https://api.github.com/search/repositories?q=topic:teatime-database&sort=stars&order=desc",
-    // "/repos.json", // localdev
-  );
-  let { items } = await response.json();
-  // if (!items.length) {
-  //   items = [
-  //     {
-  //       full_name: "yourmargin/libgen-db",
-  //       description:
-  //         "Library Genesis Non-Fiction, metadata snapshot from archive.org",
-  //       stargazers_count: 10,
-  //     },
-  //     {
-  //       full_name: "bjesus/teatime-datase",
-  //       description: "Public domain library",
-  //       stargazers_count: 5,
-  //     },
-  //     {
-  //       full_name: "bjesus/teatime-json-datase",
-  //       description: "An example database with The Communist Manifesto",
-  //       stargazers_count: 1,
-  //     },
-  //   ];
-  // }
-  remotes.value = items;
-};
-
-onMounted(async () => {
-  updateRemotes();
-});
-
-const setRemote = async (selection) => {
-  props.onFetchResults("", true, selection.full_name);
+const toggleRemote = (remote) => {
+  if (enabledRemotes.value.includes(remote.full_name)) {
+    enabledRemotes.value = enabledRemotes.value.filter(
+      (x) => x !== remote.full_name,
+    );
+  } else {
+    enabledRemotes.value.push(remote.full_name);
+  }
 };
 </script>

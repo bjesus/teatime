@@ -11,8 +11,8 @@
       and then drag-n-drop it here
     </p>
     <br />
-    <button @click="onRetry(attemped)">Try again</button>
-    <button @click="onGoBack">Back to results</button>
+    <button @click="onRetry(attempted)">Try again</button>
+    <button @click="navigateTo('')">Back to results</button>
   </div>
 </template>
 
@@ -46,16 +46,8 @@ defineProps({
     type: String,
     required: true,
   },
-  attemped: {
-    type: String,
-    required: true,
-  },
-  onRetry: {
-    type: Function,
-    required: true,
-  },
-  onGoBack: {
-    type: Function,
+  attempted: {
+    type: Object,
     required: true,
   },
 });

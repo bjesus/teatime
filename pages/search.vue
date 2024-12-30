@@ -115,13 +115,10 @@
 }
 </style>
 
-<script setup>
-const props = defineProps({
-  onFetchResults: {
-    type: Function,
-    required: true,
-  },
-});
+<script setup lang="ts">
+const searchQuery = useState("searchQuery", () => "");
+const lastQuery = useState("lastQuery", () => "");
+const results = useState("results", () => []);
 
 const csTitle = ref("");
 const csAuthor = ref("");
@@ -129,14 +126,15 @@ const csExt = ref("");
 const csLang = ref("");
 
 const makeAdvancedSearch = () => {
-  props.onFetchResults(
-    {
-      title: csTitle.value,
-      author: csAuthor.value,
-      ext: csExt.value,
-      lang: csLang.value,
-    },
-    true,
-  );
+  const query = JSON.stringify({
+    title: csTitle.value,
+    author: csAuthor.value,
+    ext: csExt.value,
+    lang: csLang.value,
+  });
+  results.value = [];
+  searchQuery.value = query;
+  lastQuery.value = query;
+  navigateTo("/?q=" + query);
 };
 </script>
