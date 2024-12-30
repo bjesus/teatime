@@ -1,6 +1,6 @@
 <template>
   <div id="results">
-    <ul v-if="booksList.length">
+    <ul v-if="booksList?.length">
       <BookCard
         v-for="(result, index) in booksList"
         :key="index"
@@ -10,7 +10,7 @@
     <p v-if="isLoading">
       Searching {{ enabledRemotes?.length || 0 }} databases...
     </p>
-    <p v-if="!isLoading && !booksList.length">No results</p>
+    <p v-if="!isLoading && !booksList?.length">No results</p>
   </div>
 </template>
 

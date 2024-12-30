@@ -14,5 +14,8 @@
 <style scoped></style>
 
 <script setup lang="ts">
-const booksList = JSON.parse(localStorage.getItem("history") || "[]");
+let booksList = [];
+if (import.meta.client) {
+  booksList = JSON.parse(localStorage.getItem("history") || "[]");
+}
 </script>
