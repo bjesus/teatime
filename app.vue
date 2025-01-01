@@ -1,5 +1,4 @@
 <template>
-  <NuxtPwaManifest />
   <main :class="{ dark: darkMode }">
     <Header />
     <div
@@ -44,6 +43,10 @@ main {
 
   &.dark {
     filter: invert(1) hue-rotate(180deg);
+
+    #content:fullscreen {
+      filter: invert(1) hue-rotate(180deg);
+    }
   }
 }
 
