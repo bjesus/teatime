@@ -104,6 +104,6 @@ const onBookProgress = async (progress) => {
       history[i].fraction = progress.fraction;
     }
   }
-  localStorage.setItem("history", JSON.stringify(history));
+  if (history) localStorage.setItem("history", JSON.stringify(history));
 };
 </script>
